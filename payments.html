@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Choose App - Payment</title>
+  <style>
+    body {
+      background-color: #0F0F0F;
+      color: #E0F7FA;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .selection-box {
+      background-color: #1a1a1a;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px #5DE2E7;
+      text-align: center;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .selection-box h2 {
+      color: #5DE2E7;
+      margin-bottom: 20px;
+    }
+
+    .app-button {
+      background-color: #5DE2E7;
+      color: black;
+      padding: 15px 30px;
+      margin: 10px;
+      border: none;
+      border-radius: 25px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .app-button:hover {
+      background-color: #00BCD4;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="selection-box">
+    <h2>Which app do you select?</h2>
+    <button class="app-button" onclick="location.href='nepo_payment.html'">Nepo Chat</button>
+    <!-- Add more app options here if needed -->
+    <!-- <button class="app-button" onclick="location.href='another_app_payment.html'">Another App</button> -->
+  </div>
+
+</body>
+</html>

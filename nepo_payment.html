@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nepo PAY</title>
+  <style>
+    body {
+      background-color: #111;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+    }
+
+    .box {
+      background-color: #1a1a1a;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px #333;
+      width: 90%;
+      max-width: 400px;
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    input, button {
+      margin: 10px 0;
+      padding: 12px;
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #0ff;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .disabled {
+      background-color: #555;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN FORM -->
+  <div class="box" id="loginBox">
+    <h2>Login to Nepo PAY</h2>
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button onclick="login()">Sign In</button>
+  </div>
+
+  <!-- PAYMENT UI -->
+  <div class="box hidden" id="paymentBox">
+    <h2>Welcome to Nepo PAY</h2>
+    <p><strong>Balance:</strong> <span id="balance">Loading...</span> 💰</p>
+    <button class="disabled">Create Nepo PAY CARD (Coming Soon)</button>
+    <button onclick="addMoney()">Add Money</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
+      authDomain: "nepo-chat.firebaseapp.com",
+      databaseURL: "https://nepo-chat-default-rtdb.firebaseio.com",
+      projectId: "nepo-chat",
+      storageBucket: "nepo-chat.appspot.com",
+      messagingSenderId: "75918244734",
+      appId: "1:75918244734:web:33762641fba78c03a3912f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    const loginBox = document.getElementById('loginBox');
+    const paymentBox = document.getElementById('paymentBox');
+    const balanceText = document.getElementById('balance');
+
+    function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          loginBox.classList.add('hidden');
+          paymentBox.classList.remove('hidden');
+          loadBalance(userCredential.user.uid);
+        })
+        .catch((error) => {
+          alert("❌ Login failed: " + error.message);
+        });
+    }
+
+    function loadBalance(uid) {
+      const balanceRef = ref(db, 'users/' + uid + '/balance');
+      get(balanceRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          balanceText.textContent = snapshot.val() + " NP₮";
+        } else {
+          balanceText.textContent = "0 NP₮";
+        }
+      }).catch((error) => {
+        balanceText.textContent = "Error loading";
+        console.error(error);
+      });
+    }
+
+    function addMoney() {
+      alert("💸 Add Money feature coming soon!");
+    }
+
+    // Check login state on load
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loginBox.classList.add('hidden');
+        paymentBox.classList.remove('hidden');
+        loadBalance(user.uid);
+      } else {
+        loginBox.classList.remove('hidden');
+        paymentBox.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

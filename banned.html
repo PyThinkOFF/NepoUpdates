@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Banned ID Check</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background-color: #0F0F0F;
+      font-family: 'Segoe UI', sans-serif;
+      color: #E0F7FA;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .box {
+      background-color: #1F1F1F;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px #5DE2E7;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    h2 {
+      color: #5DE2E7;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #5DE2E7;
+      color: black;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background-color: #00BCD4;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2>Enter Your UID or Email</h2>
+    <input type="text" id="userInput" placeholder="Enter UID or Email" />
+    <input type="password" id="passwordInput" placeholder="(Optional) Password to check status" />
+    <button onclick="checkIfBanned()">OK</button>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
+      authDomain: "nepo-chat.firebaseapp.com",
+      databaseURL: "https://nepo-chat-default-rtdb.firebaseio.com",
+      projectId: "nepo-chat",
+      storageBucket: "nepo-chat.firebasestorage.app",
+      messagingSenderId: "75918244734",
+      appId: "1:75918244734:web:33762641fba78c03a3912f",
+      measurementId: "G-V22RDC8S2Z"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    window.checkIfBanned = async function () {
+      const emailOrUid = document.getElementById("userInput").value;
+      const password = document.getElementById("passwordInput").value;
+
+      if (!emailOrUid) {
+        alert("Please enter UID or Email");
+        return;
+      }
+
+      try {
+        // Only email/password login is possible on client side
+        await signInWithEmailAndPassword(auth, emailOrUid, password || "dummy");
+        alert("✅ Account is active.");
+      } catch (error) {
+        if (error.code === 'auth/user-disabled') {
+          // Redirect to reason.html
+          window.location.href = 'reason.html';
+        } else if (error.code === 'auth/wrong-password') {
+          alert("Password is incorrect, but account exists and is active.");
+        } else if (error.code === 'auth/user-not-found') {
+          alert("User not found.");
+        } else {
+          console.error(error);
+          alert("Error: " + error.message);
+        }
+      }
+    };
+  </script>
+
+</body>
+</html>
