@@ -18,18 +18,12 @@
     }
 
     h2 {
-      margin-bottom: 10px;
+      margin-bottom: 20px;
       color: #00ccff;
       text-shadow: 0 0 8px #00ccff;
     }
 
-    #currentBalance {
-      margin-bottom: 20px;
-      font-size: 1.1em;
-      color: #00ffcc;
-    }
-
-    select, button {
+    select {
       padding: 14px;
       margin: 12px 0;
       border-radius: 6px;
@@ -42,21 +36,25 @@
       transition: background 0.3s ease;
     }
 
-    select:hover, button:hover {
+    select:hover {
       background: #00aaff;
     }
 
-    button {
-      background: #00ccff;
-      font-weight: bold;
-      text-shadow: 0 0 6px #00ccff;
+    .paypal-section {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    #paypal-button-container,
+    #card-button-container {
+      margin-top: 16px;
     }
   </style>
 </head>
 <body>
 
   <h2>Top-Up Your Account</h2>
-  <p id="currentBalance">Fetching balance...</p>
 
   <select id="amountSelect">
     <option value="25">25 ₦ ($0.12)</option>
@@ -66,11 +64,18 @@
     <option value="5000">5000 ₦ ($24.00)</option>
   </select>
 
-  <button id="topupBtn">Add Balance</button>
+  <div class="paypal-section">
+    <div id="paypal-button-container"></div>
+    <div id="card-button-container"></div>
+  </div>
 
+  <!-- PayPal SDK -->
+  <script src="https://www.paypal.com/sdk/js?client-id=AcjWKUkAfI0G1ue8OswM1MsLe50u8Isewr1FgTjl7g1agYrzrN1bJ54LAbzoYS-X2lWda9db97LVw12q&currency=USD&components=buttons,funding-eligibility"></script>
+
+  <!-- Firebase + Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getDatabase, ref, runTransaction, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+    import { getDatabase, ref, runTransaction } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
@@ -87,38 +92,58 @@
     const db = getDatabase(app);
 
     const userId = localStorage.getItem("nepo_user_id");
-
     if (!userId) {
       alert("Please login first.");
       window.location.href = "signin.html";
     }
 
-    const balanceRef = ref(db, `users/${userId}/balance`);
-    const balanceText = document.getElementById("currentBalance");
+    const priceMap = {
+      25: 0.12,
+      100: 0.48,
+      500: 2.40,
+      1000: 4.80,
+      5000: 24.00
+    };
 
-    get(balanceRef).then(snap => {
-      const balance = snap.val() || 0;
-      balanceText.textContent = `Current Balance: ₦ ${balance} (Nepo Coins)`;
-    }).catch(() => {
-      balanceText.textContent = "❌ Failed to fetch balance.";
+    let selectedAmount = parseInt(document.getElementById("amountSelect").value);
+    document.getElementById("amountSelect").addEventListener("change", (e) => {
+      selectedAmount = parseInt(e.target.value);
     });
 
-    document.getElementById("topupBtn").onclick = () => {
-      const amount = parseInt(document.getElementById("amountSelect").value);
+    function renderPayButton(fundingSource, container) {
+      paypal.Buttons({
+        fundingSource,
+        style: { layout: 'vertical', color: 'blue', shape: 'rect', label: 'pay' },
 
-      runTransaction(balanceRef, (currentBalance) => {
-        return (currentBalance || 0) + amount;
-      })
-      .then(() => {
-        alert(`✅ Top-up successful! ₦${amount} added to your account.`);
-        window.location.href = "home.html";
-      })
-      .catch((error) => {
-        alert("❌ Error updating balance: " + error.message);
-      });
-    };
+        createOrder: (data, actions) => {
+          const usd = priceMap[selectedAmount] || 0.12;
+          return actions.order.create({
+            purchase_units: [{ amount: { value: usd.toFixed(2) } }]
+          });
+        },
+
+        onApprove: (data, actions) => {
+          return actions.order.capture().then(() => {
+            const balanceRef = ref(db, `users/${userId}/balance`);
+            return runTransaction(balanceRef, (bal) => (bal || 0) + selectedAmount);
+          }).then(() => {
+            alert(`✅ ₦${selectedAmount} added to your account.`);
+            window.location.href = "home.html";
+          }).catch((err) => {
+            alert("❌ Error updating balance: " + err.message);
+          });
+        },
+
+        onError: (err) => {
+          console.error(err);
+          alert("❌ Payment error: " + err.message);
+        }
+      }).render(container);
+    }
+
+    renderPayButton(paypal.FUNDING.PAYPAL, "#paypal-button-container");
+    renderPayButton(paypal.FUNDING.CARD, "#card-button-container");
   </script>
 
 </body>
 </html>
-
